@@ -1,5 +1,7 @@
 #include <stdio.h>
 
+#include <drm/drm_fourcc.h>
+
 #include <csc_gles.h>
 #include <csc_gles_log.h>
 
@@ -160,6 +162,74 @@ bool csc_gles_import_mem(const csc_gles_buffer_type_t type,
 	case CSC_GLES_BUFFER_TYPE_NV12: {
 		// TODO: finish this.
 		buf->buffer.nv12_buffer = (nv12_buffer_t *) malloc(sizeof(nv12_buffer_t));
+		LOG_E("We have not implemented this.\n");
+		return false;
+	}
+	break;
+	default:
+		LOG_E("Unsupported buffer type: %u\n", type);
+		return false;
+	}
+
+	*out_buf = buf;
+	return true;
+}
+
+bool csc_gles_import_dmabuf(const csc_gles_buffer_type_t type,
+			    const int width, const int height,
+			    const int fd,
+			    csc_gles_imported_buffer_t **out_buf)
+{
+		if (!out_buf) {
+		LOG_E("Invalid pointer %p was passed in.", out_buf);
+		return false;
+	}
+	*out_buf = nullptr;
+
+	csc_gles_imported_buffer_t *buf = (csc_gles_imported_buffer_t *) malloc(sizeof(csc_gles_imported_buffer_t));
+
+	buf->type = type;
+	switch (type) {
+	case CSC_GLES_BUFFER_TYPE_RGBA8888: {
+		buf->buffer.rgba_buffer = (rgba_buffer_t *) malloc(sizeof(rgba_buffer_t));
+		buf->buffer.rgba_buffer->width = width;
+		buf->buffer.rgba_buffer->height = height;
+
+		// Create OpenGL image
+		EGLImageKHR image = eglCreateImageKHR(g_egl_display, EGL_NO_CONTEXT, EGL_LINUX_DMA_BUF_EXT, (EGLClientBuffer)NULL , (EGLint[]) {
+			EGL_WIDTH, width,
+			EGL_HEIGHT, height,
+			//EGL_LINUX_DRM_FOURCC_EXT, DRM_FORMAT_ARGB8888,
+			EGL_LINUX_DRM_FOURCC_EXT, DRM_FORMAT_ABGR8888,
+			EGL_DMA_BUF_PLANE0_FD_EXT, fd,
+			EGL_DMA_BUF_PLANE0_OFFSET_EXT, 0,
+			EGL_DMA_BUF_PLANE0_PITCH_EXT, width * 4,
+			EGL_NONE
+		});
+		if (image == EGL_NO_IMAGE_KHR) {
+			LOG_E("Failed to create KHR image, egl err: 0x%x\n", eglGetError());
+			return false;
+		}
+		LOG_D("Created KHR image %p\n", image);
+
+		glGenTextures(1, &buf->buffer.rgba_buffer->tex_id);
+		glBindTexture(GL_TEXTURE_2D, buf->buffer.rgba_buffer->tex_id);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+		glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+		LOG_D("Generated texture %u\n", buf->buffer.rgba_buffer->tex_id);
+
+		eglDestroyImageKHR(g_egl_display, image);
+	}
+	break;
+	case CSC_GLES_BUFFER_TYPE_NV12: {
+		// TODO: finish this.
 		LOG_E("We have not implemented this.\n");
 		return false;
 	}

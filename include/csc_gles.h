@@ -104,6 +104,10 @@ bool csc_gles_import_mem(const csc_gles_buffer_type_t type,
 			 const int width, const int height,
 			 const void *src,
 			 csc_gles_imported_buffer_t **out_buf);
+bool csc_gles_import_dmabuf(const csc_gles_buffer_type_t type,
+			    const int width, const int height,
+			    const int fd,
+			    csc_gles_imported_buffer_t **out_buf);
 void csc_gles_free_buffer(csc_gles_imported_buffer_t *buf);
 
 bool csc_gles_convert_rgba8888_to_nv12(const csc_gles_imported_buffer_t *buf, GLuint *out_ssbo, size_t *out_sz);
