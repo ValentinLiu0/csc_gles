@@ -33,3 +33,13 @@ add_executable(csc_gles_test_simple)
 file(GLOB csc_gles_test_simple_srcs CONFIGURE_DEPENDS test/csc_gles_test_simple/*.c test/csc_gles_test_simple/*.h)
 target_sources(csc_gles_test_simple PUBLIC ${csc_gles_test_simple_srcs})
 target_link_libraries(csc_gles_test_simple PRIVATE csc_gles)
+
+if(ANDROID)
+
+# Test program for csc_gles library
+add_executable(csc_gles_test_android)
+file(GLOB csc_gles_test_android_srcs CONFIGURE_DEPENDS test/csc_gles_test_android/*.c test/csc_gles_test_android/*.h)
+target_sources(csc_gles_test_android PUBLIC ${csc_gles_test_android_srcs})
+target_link_libraries(csc_gles_test_android PRIVATE csc_gles)
+
+endif()
