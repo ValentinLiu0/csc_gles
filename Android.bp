@@ -1,0 +1,44 @@
+cc_library_headers {
+    name: "libcsc_gles_headers",
+    export_include_dirs: ["include"],
+    vendor: true,
+}
+
+cc_library_shared {
+    name: "libcsc_gles",
+    header_libs: [
+	"gl_headers",
+	"libcsc_gles_headers",
+    ],
+    shared_libs: [
+        "libEGL",
+        "libGLESv2",
+        "libGLESv3",
+    ],
+    srcs: [
+        "src/csc_gles.c",
+	"src/csc_gles_gles_support.c",
+    ],
+    c_std: "gnu23",
+    cflags: [
+        "-D_GNU_SOURCE=1",
+        "-D_FILE_OFFSET_BITS=64",
+        "-Wall",
+        "-Wsign-compare",
+        "-Wpointer-arith",
+        "-Wcast-qual",
+        "-Wcast-align",
+        "-Wno-unused-parameter",
+    ],
+    product_variables: {
+        platform_sdk_version: {
+            cflags: ["-DANDROID_API_LEVEL=%d"],
+        },
+        debuggable: {
+            cflags: [
+                "-DANDROID_DEBUGGABLE",
+            ],
+        },
+    },
+    vendor: true,
+}
